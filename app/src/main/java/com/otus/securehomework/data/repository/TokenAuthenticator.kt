@@ -15,11 +15,9 @@ import com.otus.securehomework.data.Response as DataResponse
 
 
 class TokenAuthenticator @Inject constructor(
-    context: Context,
-    private val tokenApi: TokenRefreshApi
+    private val tokenApi: TokenRefreshApi,
+    private val userPreferences: UserPreferences
 ) : Authenticator, BaseRepository(tokenApi) {
-
-    private val userPreferences = UserPreferences(context)
 
     override fun authenticate(route: Route?, response: Response): Request? {
         return runBlocking {

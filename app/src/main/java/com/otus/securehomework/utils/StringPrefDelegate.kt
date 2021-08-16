@@ -1,0 +1,20 @@
+package com.otus.securehomework.utils
+
+import android.content.SharedPreferences
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
+
+class StringPrefDelegate(
+    private val sharedPreferences: SharedPreferences,
+    private val key: String,
+    private val defaultValue: String? = null
+) : ReadWriteProperty<Any, String?> {
+
+    override fun getValue(thisRef: Any, property: KProperty<*>): String? =
+        sharedPreferences.getString(key, defaultValue)
+
+    override fun setValue(thisRef: Any, property: KProperty<*>, value: String?) =
+        sharedPreferences.edit()
+            .putString(key, value)
+            .apply()
+}

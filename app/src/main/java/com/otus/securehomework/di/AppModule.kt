@@ -2,49 +2,57 @@ package com.otus.securehomework.di
 
 import android.content.Context
 import com.otus.securehomework.data.repository.AuthRepository
+import com.otus.securehomework.data.repository.TokenAuthenticator
 import com.otus.securehomework.data.repository.UserRepository
 import com.otus.securehomework.data.source.local.UserPreferences
 import com.otus.securehomework.data.source.network.AuthApi
+import com.otus.securehomework.data.source.network.TokenRefreshApi
 import com.otus.securehomework.data.source.network.UserApi
+import com.otus.securehomework.utils.SecurityUtil
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import dagger.Reusable
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Authenticator
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    @Singleton
     @Provides
-    fun provideRemoteDataSource(): RemoteDataSource {
-        return RemoteDataSource()
-    }
+    @Singleton
+    fun provideTokenApi() = buildTokenApi()
+
+    @Provides
+    @Singleton
+    fun provideAuthenticator(tokenApi: TokenRefreshApi, userPreferences: UserPreferences) : Authenticator =
+        TokenAuthenticator(tokenApi, userPreferences)
 
     @Provides
     fun provideAuthApi(
-        remoteDataSource: RemoteDataSource,
-        @ApplicationContext context: Context
+        authenticator: Authenticator
     ): AuthApi {
-        return remoteDataSource.buildApi(AuthApi::class.java, context)
+        return buildApi(AuthApi::class.java, authenticator)
     }
 
     @Provides
     fun provideUserApi(
-        remoteDataSource: RemoteDataSource,
-        @ApplicationContext context: Context
+        authenticator: Authenticator
     ): UserApi {
-        return remoteDataSource.buildApi(UserApi::class.java, context)
+        return buildApi(UserApi::class.java, authenticator)
     }
 
     @Singleton
     @Provides
     fun provideUserPreferences(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        securityUtil: SecurityUtil
     ): UserPreferences {
-        return UserPreferences(context)
+        return UserPreferences(context, securityUtil)
     }
 
     @Provides
@@ -61,4 +69,14 @@ object AppModule {
     ): UserRepository {
         return UserRepository(userApi)
     }
+
+    @Provides
+    @Reusable
+    fun providesSecurityUtil(@ApplicationContext context: Context): SecurityUtil =
+        SecurityUtil(context)
+
+    @Provides
+    @Reusable
+    fun provideTokenAuthenticator(tokenApi : TokenRefreshApi, userPreferences: UserPreferences) =
+        TokenAuthenticator(tokenApi, userPreferences)
 }
