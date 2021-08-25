@@ -1,7 +1,6 @@
 package com.otus.securehomework.utils
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.os.Build
 import android.security.KeyPairGeneratorSpec
 import android.security.keystore.KeyGenParameterSpec
@@ -10,7 +9,6 @@ import android.util.Base64
 import androidx.annotation.RequiresApi
 import java.math.BigInteger
 import java.security.*
-import java.security.spec.AlgorithmParameterSpec
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
@@ -20,7 +18,7 @@ import javax.crypto.spec.SecretKeySpec
 import javax.inject.Inject
 import javax.security.auth.x500.X500Principal
 
-class SecurityUtil @Inject constructor(val context : Context) {
+class SecurityUtil @Inject constructor(val context: Context) {
 
     private val sharedPreferences =
         context.getSharedPreferences("SHARED_PREFERENCE_NAME", Context.MODE_PRIVATE)
@@ -30,30 +28,30 @@ class SecurityUtil @Inject constructor(val context : Context) {
             load(null)
         }
     }
-    private val fixedIV = byteArrayOf(55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44)
 
     fun encryptAes(plainText: String): String {
         val cipher = Cipher.getInstance(AES_MODE)
-        cipher.init(Cipher.ENCRYPT_MODE, getAesSecretKey(), getInitializationVector())
+        cipher.init(Cipher.ENCRYPT_MODE, generateAesSecretKey(), GCMParameterSpec(128, cipher.iv))
         val encodedBytes = cipher.doFinal(plainText.toByteArray())
-        return Base64.encodeToString(encodedBytes, Base64.NO_WRAP)
+        return Base64.encodeToString(encodedBytes, Base64.DEFAULT)
     }
 
     fun decryptAes(encrypted: String): String {
         val cipher = Cipher.getInstance(AES_MODE)
-        cipher.init(Cipher.DECRYPT_MODE, getAesSecretKey(), getInitializationVector())
+        cipher.init(Cipher.DECRYPT_MODE, getAesSecretKey(), GCMParameterSpec(128, cipher.iv))
         val decodedBytes = Base64.decode(encrypted, Base64.NO_WRAP)
         val decoded = cipher.doFinal(decodedBytes)
         return String(decoded, Charsets.UTF_8)
     }
 
-    private fun getInitializationVector(): AlgorithmParameterSpec {
-        return GCMParameterSpec(128, fixedIV)
-    }
-
     private fun getAesSecretKey(): SecretKey {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            keyStore.getKey(AES_KEY_ALIAS, null) as? SecretKey ?: generateAesSecretKey()
+            (keyStore.getEntry(AES_KEY_ALIAS, null) as KeyStore.SecretKeyEntry).secretKey
+//            try {
+//                (keyStore.getEntry(AES_KEY_ALIAS, null) as KeyStore.SecretKeyEntry).secretKey
+//            } catch (ex: Exception) {
+//                generateAesSecretKey()
+//            }
         } else {
             getAesSecretKeyLessThanM() ?: generateAesSecretKey()
         }
@@ -102,19 +100,18 @@ class SecurityUtil @Inject constructor(val context : Context) {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    private fun getKeyGenerator() = KeyGenerator.getInstance(AES_ALGORITHM, KEY_PROVIDER).apply {
-        init(
-            KeyGenParameterSpec.Builder(
-                AES_KEY_ALIAS,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+    private fun getKeyGenerator() =
+        KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEY_PROVIDER).apply {
+            init(
+                KeyGenParameterSpec.Builder(
+                    AES_KEY_ALIAS,
+                    KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+                )
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .build()
             )
-                .setBlockModes(KeyProperties.BLOCK_MODE_ECB)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                .setUserAuthenticationRequired(true)
-                .setRandomizedEncryptionRequired(false)
-                .build()
-        )
-    }
+        }
 
     private fun generateAndSaveAesSecretKeyLessThanM(): SecretKey {
         val key = ByteArray(16)
@@ -136,7 +133,7 @@ class SecurityUtil @Inject constructor(val context : Context) {
     }
 
     private fun getRsaPublicKey(): PublicKey {
-        return keyStore.getCertificate(RSA_KEY_ALIAS)?.publicKey?: generateRsaSecretKey().public
+        return keyStore.getCertificate(RSA_KEY_ALIAS)?.publicKey ?: generateRsaSecretKey().public
     }
 
     private companion object {
@@ -147,6 +144,6 @@ class SecurityUtil @Inject constructor(val context : Context) {
         const val RSA_ALGORITHM = "RSA"
         const val ENCRYPTED_KEY_NAME = "EncryptedKeysKeyName"
         const val RSA_MODE_LESS_THAN_M = "RSA/ECB/PKCS1Padding"
-        const val AES_MODE = "AES/ECB/PKCS7Padding"
+        const val AES_MODE = "AES/GCM/NoPadding"
     }
 }

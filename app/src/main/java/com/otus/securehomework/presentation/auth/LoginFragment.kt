@@ -29,7 +29,7 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
         binding = FragmentLoginBinding.bind(view)
 
         binding.progressbar.visible(false)
-        binding.buttonLogin.enable(false)
+        binding.buttonLogin.enable(true)
 
         viewModel.loginResponse.observe(viewLifecycleOwner, Observer {
             binding.progressbar.visible(it is Response.Loading)
@@ -46,10 +46,10 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
                 is Response.Failure -> handleApiError(it) { login() }
             }
         })
-        binding.editTextTextPassword.addTextChangedListener {
-            val email = binding.editTextTextEmailAddress.text.toString().trim()
-            binding.buttonLogin.enable(email.isNotEmpty() && it.toString().isNotEmpty())
-        }
+//        binding.editTextTextPassword.addTextChangedListener {
+//            val email = binding.editTextTextEmailAddress.text.toString().trim()
+//            binding.buttonLogin.enable(email.isNotEmpty() && it.toString().isNotEmpty())
+//        }
         binding.buttonLogin.setOnClickListener {
             login()
         }
