@@ -1,6 +1,8 @@
 package com.otus.securehomework.di
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.otus.securehomework.data.repository.AuthRepository
 import com.otus.securehomework.data.repository.TokenAuthenticator
 import com.otus.securehomework.data.repository.UserRepository
@@ -70,10 +72,10 @@ object AppModule {
         return UserRepository(userApi)
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     @Provides
     @Reusable
-    fun providesSecurityUtil(@ApplicationContext context: Context): SecurityUtil =
-        SecurityUtil(context)
+    fun providesSecurityUtil(): SecurityUtil = SecurityUtil()
 
     @Provides
     @Reusable
