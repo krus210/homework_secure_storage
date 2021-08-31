@@ -1,8 +1,6 @@
 package com.otus.securehomework.data.source.local
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
@@ -60,7 +58,7 @@ class UserPreferences
             editStore.invoke(it, encryptedValue.joinToString("|"))
         }
     }
-    
+
     private inline fun <reified T> Flow<Preferences>.secureMap(crossinline fetchValue: (value: Preferences) -> String): Flow<T?> {
         return map {
             val fetchValueResult =

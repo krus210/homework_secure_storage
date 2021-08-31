@@ -2,7 +2,6 @@ package com.otus.securehomework.di
 
 import android.content.Context
 import android.os.Build
-import androidx.annotation.RequiresApi
 import com.otus.securehomework.data.repository.AuthRepository
 import com.otus.securehomework.data.repository.TokenAuthenticator
 import com.otus.securehomework.data.repository.UserRepository
@@ -11,7 +10,8 @@ import com.otus.securehomework.data.source.network.AuthApi
 import com.otus.securehomework.data.source.network.TokenRefreshApi
 import com.otus.securehomework.data.source.network.UserApi
 import com.otus.securehomework.utils.SecurityUtil
-import dagger.Binds
+import com.otus.securehomework.utils.SecurityUtilImpl
+import com.otus.securehomework.utils.SecurityUtilLowerMImpl
 import dagger.Module
 import dagger.Provides
 import dagger.Reusable
@@ -31,7 +31,10 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideAuthenticator(tokenApi: TokenRefreshApi, userPreferences: UserPreferences) : Authenticator =
+    fun provideAuthenticator(
+        tokenApi: TokenRefreshApi,
+        userPreferences: UserPreferences
+    ): Authenticator =
         TokenAuthenticator(tokenApi, userPreferences)
 
     @Provides
@@ -72,13 +75,14 @@ object AppModule {
         return UserRepository(userApi)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     @Provides
     @Reusable
-    fun providesSecurityUtil(): SecurityUtil = SecurityUtil()
+    fun providesSecurityUtil(@ApplicationContext applicationContext: Context): SecurityUtil =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) SecurityUtilImpl()
+        else SecurityUtilLowerMImpl(applicationContext)
 
     @Provides
     @Reusable
-    fun provideTokenAuthenticator(tokenApi : TokenRefreshApi, userPreferences: UserPreferences) =
+    fun provideTokenAuthenticator(tokenApi: TokenRefreshApi, userPreferences: UserPreferences) =
         TokenAuthenticator(tokenApi, userPreferences)
 }
