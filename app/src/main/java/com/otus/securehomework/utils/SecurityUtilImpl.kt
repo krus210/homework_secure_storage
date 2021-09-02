@@ -16,11 +16,7 @@ import javax.inject.Inject
 @RequiresApi(Build.VERSION_CODES.M)
 class SecurityUtilImpl @Inject constructor() : SecurityUtil {
 
-    private val FIXED_IV by lazy {
-        val array = ByteArray(12)
-        SecureRandom().nextBytes(array)
-        array
-    }
+    private val FIXED_IV = byteArrayOf(55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44)
     private val provider = "AndroidKeyStore"
     private val cipher by lazy {
         Cipher.getInstance("AES/GCM/NoPadding")
