@@ -37,12 +37,22 @@ class SecurityUtilLowerMImpl @Inject constructor(
     private var encryptedKeyName by StringPrefDelegate(sharedPrefs, ENCRYPTED_KEY_NAME)
 
     override fun encryptData(keyAlias: String, text: String): ByteArray {
-        cipher.init(Cipher.ENCRYPT_MODE, generateAesSecretKey(keyAlias), GCMParameterSpec(128, FIXED_IV))
+        cipher.init(
+            Cipher.ENCRYPT_MODE,
+            getAesSecretKey(keyAlias) ?: generateAesSecretKey(keyAlias),
+            GCMParameterSpec(
+                AUTH_TAG_LENGTH, FIXED_IV
+            )
+        )
         return cipher.doFinal(text.toByteArray(charset))
     }
 
     override fun decryptData(keyAlias: String, encryptedData: ByteArray): String {
-        cipher.init(Cipher.DECRYPT_MODE, getAesSecretKey(keyAlias), GCMParameterSpec(128, FIXED_IV))
+        cipher.init(
+            Cipher.DECRYPT_MODE,
+            getAesSecretKey(keyAlias),
+            GCMParameterSpec(AUTH_TAG_LENGTH, FIXED_IV)
+        )
         return cipher.doFinal(encryptedData).toString(charset)
     }
 
@@ -61,7 +71,7 @@ class SecurityUtilLowerMImpl @Inject constructor(
     }
 
     private fun generateAesSecretKey(keyAlias: String): SecretKey {
-        val key = ByteArray(8)
+        val key = ByteArray(16)
         SecureRandom().run { nextBytes(key) }
 
         val rsaPublicKey =
@@ -96,5 +106,6 @@ class SecurityUtilLowerMImpl @Inject constructor(
         private const val PROVIDER = "AndroidKeyStore"
         private const val RSA_ALGORITHM = "RSA"
         private const val AES_ALGORITHM = "AES"
+        const val AUTH_TAG_LENGTH = 128
     }
 }

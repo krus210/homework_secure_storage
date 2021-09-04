@@ -35,12 +35,12 @@ class SecurityUtilImpl @Inject constructor() : SecurityUtil {
     }
 
     override fun encryptData(keyAlias: String, text: String): ByteArray {
-        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(keyAlias), GCMParameterSpec(96, FIXED_IV))
+        cipher.init(Cipher.ENCRYPT_MODE, getSecretKey(keyAlias), GCMParameterSpec(AUTH_TAG_LENGTH, FIXED_IV))
         return cipher.doFinal(text.toByteArray(charset))
     }
 
     override fun decryptData(keyAlias: String, encryptedData: ByteArray): String {
-        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(keyAlias), GCMParameterSpec(96, FIXED_IV))
+        cipher.init(Cipher.DECRYPT_MODE, getSecretKey(keyAlias), GCMParameterSpec(AUTH_TAG_LENGTH, FIXED_IV))
         return cipher.doFinal(encryptedData).toString(charset)
     }
 
@@ -51,6 +51,7 @@ class SecurityUtilImpl @Inject constructor() : SecurityUtil {
                     .Builder(keyAlias, PURPOSE_ENCRYPT or PURPOSE_DECRYPT)
                     .setBlockModes(BLOCK_MODE_GCM)
                     .setEncryptionPaddings(ENCRYPTION_PADDING_NONE)
+                    .setRandomizedEncryptionRequired(false)
                     .build()
             )
         }.generateKey()
@@ -58,4 +59,8 @@ class SecurityUtilImpl @Inject constructor() : SecurityUtil {
 
     private fun getSecretKey(keyAlias: String) =
         keyStore.getKey(keyAlias, null) as? SecretKey ?: generateSecretKey(keyAlias)
+
+    private companion object {
+        const val AUTH_TAG_LENGTH = 128
+    }
 }
