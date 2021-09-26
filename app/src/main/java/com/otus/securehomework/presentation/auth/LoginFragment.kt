@@ -2,6 +2,7 @@ package com.otus.securehomework.presentation.auth
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -30,6 +31,14 @@ class LoginFragment : Fragment(R.layout.fragment_login) {
 
         binding.progressbar.visible(false)
         binding.buttonLogin.enable(true)
+
+        if (viewModel.isBiometricPromptEnabled()) {
+            binding.biometricSwitchButton.isVisible = true
+            binding.biometricSwitchButton.isChecked = viewModel.setAuthWithBiometricPrompt
+            binding.biometricSwitchButton.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.setAuthWithBiometricPrompt = isChecked
+            }
+        }
 
         viewModel.loginResponse.observe(viewLifecycleOwner, Observer {
             binding.progressbar.visible(it is Response.Loading)

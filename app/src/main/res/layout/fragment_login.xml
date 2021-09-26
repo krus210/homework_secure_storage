@@ -87,6 +87,19 @@
         app:layout_constraintTop_toBottomOf="@+id/textViewForgotPassword"
         style="@style/ButtonPrimary" />
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/biometric_switch_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        app:switchPadding="8dp"
+        android:text="Включить вход через биометрию"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:visibility="gone"
+        tools:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/buttonLogin" />
+
     <TextView
         android:id="@+id/textViewForgotPassword"
         android:layout_width="wrap_content"

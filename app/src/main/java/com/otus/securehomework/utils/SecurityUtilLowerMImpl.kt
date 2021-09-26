@@ -1,6 +1,7 @@
 package com.otus.securehomework.utils
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.security.KeyPairGeneratorSpec
 import android.util.Base64
 import java.math.BigInteger
@@ -14,7 +15,8 @@ import javax.inject.Inject
 import javax.security.auth.x500.X500Principal
 
 class SecurityUtilLowerMImpl @Inject constructor(
-    val context: Context
+    val context: Context,
+    private val sharedPrefs : SharedPreferences
 ) : SecurityUtil {
 
     private val FIXED_IV = byteArrayOf(55, 54, 53, 52, 51, 50, 49, 48, 47, 46, 45, 44)
@@ -33,7 +35,6 @@ class SecurityUtilLowerMImpl @Inject constructor(
             load(null)
         }
     }
-    private val sharedPrefs by lazy { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     private var encryptedKeyName by StringPrefDelegate(sharedPrefs, ENCRYPTED_KEY_NAME)
 
     override fun encryptData(keyAlias: String, text: String): ByteArray {
@@ -102,7 +103,6 @@ class SecurityUtilLowerMImpl @Inject constructor(
 
     companion object {
         private const val ENCRYPTED_KEY_NAME = "RSAEncryptedKeysKeyName"
-        private const val PREFS = "PREFS"
         private const val PROVIDER = "AndroidKeyStore"
         private const val RSA_ALGORITHM = "RSA"
         private const val AES_ALGORITHM = "AES"

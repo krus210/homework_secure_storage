@@ -1,6 +1,7 @@
 package com.otus.securehomework.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Build
 import com.otus.securehomework.data.repository.AuthRepository
 import com.otus.securehomework.data.repository.TokenAuthenticator
@@ -77,12 +78,17 @@ object AppModule {
 
     @Provides
     @Reusable
-    fun providesSecurityUtil(@ApplicationContext applicationContext: Context): SecurityUtil =
+    fun providesSecurityUtil(@ApplicationContext applicationContext: Context, sharedPreferences: SharedPreferences): SecurityUtil =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) SecurityUtilImpl()
-        else SecurityUtilLowerMImpl(applicationContext)
+        else SecurityUtilLowerMImpl(applicationContext, sharedPreferences)
 
     @Provides
     @Reusable
     fun provideTokenAuthenticator(tokenApi: TokenRefreshApi, userPreferences: UserPreferences) =
         TokenAuthenticator(tokenApi, userPreferences)
+
+    @Provides
+    @Reusable
+    fun providePrefs(@ApplicationContext applicationContext: Context): SharedPreferences =
+        applicationContext.getSharedPreferences("PREFS", Context.MODE_PRIVATE)
 }
